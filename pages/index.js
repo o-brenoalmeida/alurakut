@@ -49,7 +49,7 @@ export default function Home() {
                 return (
                   <li>
                     <a href={`users/$(item)`} key={item}>
-                      <img src={`https:/github.com/${item}.png`} />
+                      <img src={`https://github.com/${item}.png`} />
                       <span>{item}</span>
                     </a>
                   </li>
