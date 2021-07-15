@@ -2,143 +2,178 @@ import React from 'react';
 import styled from 'styled-components'
 import MainGrid from '../src/components/MainGrid'
 import Box from '../src/components/Box'
-import { AlurakutMenu, AlurakutProfileSidebarMenuDefault, OrkutNostalgicIconSet } from '../src/lib/AlurakutCommons'
-import { ProfileRelationsBoxWrapper } from '../src/components/ProfileRelations';
+import {AlurakutMenu, AlurakutProfileSidebarMenuDefault, OrkutNostalgicIconSet} from '../src/lib/AlurakutCommons'
+import {ProfileRelationsBoxWrapper} from '../src/components/ProfileRelations';
 
 function ProfileSidebar(propriedades) {
-  return (
-    <Box as="aside">
-      <img src={`https://github.com/${propriedades.githubUser}.png`} style={{ borderRadius: '8px' }} />
-      <hr />
+    return (
+        <Box as="aside">
+            <img src={`https://github.com/${propriedades.githubUser}.png`} style={{borderRadius: '8px'}}/>
+            <hr/>
 
-      <a className="boxLink" href={`https://github.com/&{propriedades.githubUser}`}>
-        @{propriedades.githubUser}
-      </a>
-      <hr />
+            <a className="boxLink" href={`https://github.com/&{propriedades.githubUser}`}>
+                @{propriedades.githubUser}
+            </a>
+            <hr/>
 
-      <AlurakutProfileSidebarMenuDefault />
-    </Box>
-  )
+            <AlurakutProfileSidebarMenuDefault/>
+        </Box>
+    )
+}
+
+function ProfileRelationsBox(props) {
+    return (
+        <ProfileRelationsBoxWrapper>
+            <h2 className="smallTitle">
+                {props.title} ({props.items.length})
+            </h2>
+            <ul>
+                {/*{followers.map((item) => {*/}
+                {/*    return (*/}
+                {/*        <li key={item}>*/}
+                {/*            <a href={`https://github.com/&(item.login).png`}>*/}
+                {/*                <img src={`https://github.com/${item}.png`}/>*/}
+                {/*                <span>{item}</span>*/}
+                {/*            </a>*/}
+                {/*        </li>*/}
+                {/*    )*/}
+                {/*})}*/}
+            </ul>
+        </ProfileRelationsBoxWrapper>
+    )
 }
 
 export default function Home() {
-  const user = 'o-brenoalmeida';
+    const user = 'o-brenoalmeida';
 
-  // Index 0 = lista de comunidades sendo salvo em communities - Index 1 - função que serve para monitorar modificações da lista, sendo salvo em setComunnities 
-  const [communities, setCommunities] = React.useState([{
-    id: '6465465',
-    title: 'Eu odeio acordar cedo',
-    image: 'https://alurakut.vercel.app/capa-comunidade-01.jpg'
-  }]);
-  // const communities = ['Alurakut'];
-  const listaPessoas = [
-    'juunegreiros',
-    'omariosouto',
-    'peas',
-    'marcobrunodev',
-    'waldeyr',
-    'fagundes'
-  ];
+    // Index 0 = lista de comunidades sendo salvo em communities - Index 1 - função que serve para monitorar modificações da lista, sendo salvo em setComunnities
+    const [communities, setCommunities] = React.useState([{
+        id: '6465465',
+        title: 'Eu odeio acordar cedo',
+        image: 'https://alurakut.vercel.app/capa-comunidade-01.jpg'
+    }]);
+    // const communities = ['Alurakut'];
+    const listaPessoas = [
+        'juunegreiros',
+        'omariosouto',
+        'peas',
+        'marcobrunodev',
+        'waldeyr',
+        'fagundes'
+    ];
 
-  return (
-    <>
-      <AlurakutMenu githubUser={user}/>
-      <MainGrid>
-        <div className="profileArea" style={{ gridArea: 'profileArea' }}>
-          <ProfileSidebar githubUser={user} />
-        </div>
+    const [followers, setFollowers] = React.useState([]);
+    React.useEffect(function (){
+        fetch('https://api.github.com/users/peas/followers')
+            .then(function (serverResponse) {
+                return serverResponse.json();
+            })
+            .then(function (fullResponse) {
+                setFollowers(fullResponse);
+            })
+    }, [])
 
-        <div className="welcomeArea" style={{ gridArea: 'welcomeArea' }}>
-          <Box>
-            <h1 className="title">
-              Bem-vindo(a)
-            </h1>
+    return (
+        <>
+            <AlurakutMenu githubUser={user}/>
+            <MainGrid>
+                <div className="profileArea" style={{gridArea: 'profileArea'}}>
+                    <ProfileSidebar githubUser={user}/>
+                </div>
 
-            <OrkutNostalgicIconSet sexy={3} legal={3} confiavel={3} />
-          </Box>
-          <Box>
-            <h2 className="subTitle">O que você deseja fazer?</h2>
-            <form onSubmit={function handleCreateCommunity(e) {
-              e.preventDefault();
-              const dadosForm = new FormData(e.target);
+                <div className="welcomeArea" style={{gridArea: 'welcomeArea'}}>
+                    <Box>
+                        <h1 className="title">
+                            Bem-vindo(a)
+                        </h1>
 
-              console.log("Titulo", dadosForm.get('title'));
-              console.log("Image", dadosForm.get('image'));
+                        <OrkutNostalgicIconSet sexy={3} legal={3} confiavel={3}/>
+                    </Box>
+                    <Box>
+                        <h2 className="subTitle">O que você deseja fazer?</h2>
+                        <form onSubmit={function handleCreateCommunity(e) {
+                            e.preventDefault();
+                            const dadosForm = new FormData(e.target);
 
-              const comunity = {
-                id: new Data().toISOString(),
-                title: dadosForm.get('title'),
-                image: dadosForm.get('image')
-              }
+                            console.log("Titulo", dadosForm.get('title'));
+                            console.log("Image", dadosForm.get('image'));
 
-              // operador spread
-              // espalhou o conteúdo da lista communities dentro do array communitiesUpdated
-              const communitiesUpdated =  [...communities, comunity];
-              setCommunities(communitiesUpdated);
-            }}>
-              <div>
-                <input
-                  placeholder="Qual vai ser o nome da comunidade?"
-                  name="title"
-                  aria-label="Qual vai ser o nome da comunidade?"
-                  type="text"
-                />
-              </div>
-              <div>
-                <input
-                  placeholder="Coloque uma URL para usarmos de capa"
-                  name="image"
-                  aria-label="Coloque uma URL para usarmos de capa"
-                />
-              </div>
+                            const comunity = {
+                                id: new Data().toISOString(),
+                                title: dadosForm.get('title'),
+                                image: dadosForm.get('image')
+                            }
 
-              <button>
-                Criar comunidade
-              </button>
-            </form>
-          </Box>
-        </div>
+                            // operador spread
+                            // espalhou o conteúdo da lista communities dentro do array communitiesUpdated
+                            const communitiesUpdated = [...communities, comunity];
+                            setCommunities(communitiesUpdated);
+                        }}>
+                            <div>
+                                <input
+                                    placeholder="Qual vai ser o nome da comunidade?"
+                                    name="title"
+                                    aria-label="Qual vai ser o nome da comunidade?"
+                                    type="text"
+                                />
+                            </div>
+                            <div>
+                                <input
+                                    placeholder="Coloque uma URL para usarmos de capa"
+                                    name="image"
+                                    aria-label="Coloque uma URL para usarmos de capa"
+                                />
+                            </div>
 
-        <div className="profileRelationsArea" style={{ gridArea: 'profileRelationsArea' }}>
-          <ProfileRelationsBoxWrapper>
-            <h2 className="smallTitle">
-              Amigos ({listaPessoas.length})
-            </h2>
-            <ul>
-              {listaPessoas.map((item) => {
-                return (
-                  <li key={item}>
-                    <a href={`users/$(item)`} key={item}>
-                      <img src={`https://github.com/${item}.png`} />
-                      <span>{item}</span>
-                    </a>
-                  </li>
-                )
-              })}
-            </ul>
-          </ProfileRelationsBoxWrapper>
-          <Box>
+                            <button>
+                                Criar comunidade
+                            </button>
+                        </form>
+                    </Box>
+                </div>
 
-            <ProfileRelationsBoxWrapper>
-              <h2 className="smallTitle">
-                Comunidades ({communities.length})
-              </h2>
-              <ul>
-                {communities.map((item) => {
-                  return (
-                    <li key={item.id}>
-                      <a href={`users/$(item.title)`} key={item.title}>
-                        <img src={item.image} />
-                        <span>{item.title}</span>
-                      </a>
-                    </li>
-                  )
-                })}
-              </ul>
-            </ProfileRelationsBoxWrapper>
-          </Box>
-        </div>
-      </MainGrid>
-    </>
-  )
+                <div className="profileRelationsArea" style={{gridArea: 'profileRelationsArea'}}>
+                    <Box>
+                        <ProfileRelationsBox title="Seguidores" items={followers} />
+                        <ProfileRelationsBoxWrapper>
+                            <h2 className="smallTitle">
+                                Amigos ({listaPessoas.length})
+                            </h2>
+                            <ul>
+                                {listaPessoas.map((item) => {
+                                    return (
+                                        <li key={item}>
+                                            <a href={`users/$(item)`} key={item}>
+                                                <img src={`https://github.com/${item}.png`}/>
+                                                <span>{item}</span>
+                                            </a>
+                                        </li>
+                                    )
+                                })}
+                            </ul>
+                        </ProfileRelationsBoxWrapper>
+                    </Box>
+                    <Box>
+                        <ProfileRelationsBoxWrapper>
+                            <h2 className="smallTitle">
+                                Comunidades ({communities.length})
+                            </h2>
+                            <ul>
+                                {communities.map((item) => {
+                                    return (
+                                        <li key={item.id}>
+                                            <a href={`users/$(item.title)`} key={item.title}>
+                                                <img src={item.image}/>
+                                                <span>{item.title}</span>
+                                            </a>
+                                        </li>
+                                    )
+                                })}
+                            </ul>
+                        </ProfileRelationsBoxWrapper>
+                    </Box>
+                </div>
+            </MainGrid>
+        </>
+    )
 }
