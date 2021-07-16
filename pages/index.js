@@ -5,6 +5,8 @@ import Box from '../src/components/Box'
 import {AlurakutMenu, AlurakutProfileSidebarMenuDefault, OrkutNostalgicIconSet} from '../src/lib/AlurakutCommons'
 import {ProfileRelationsBoxWrapper} from '../src/components/ProfileRelations';
 
+
+//bebido7171@ovooovo.com
 function ProfileSidebar(propriedades) {
     return (
         <Box as="aside">
@@ -28,16 +30,17 @@ function ProfileRelationsBox(props) {
                 {props.title} ({props.items.length})
             </h2>
             <ul>
-                {/*{followers.map((item) => {*/}
-                {/*    return (*/}
-                {/*        <li key={item}>*/}
-                {/*            <a href={`https://github.com/&(item.login).png`}>*/}
-                {/*                <img src={`https://github.com/${item}.png`}/>*/}
-                {/*                <span>{item}</span>*/}
-                {/*            </a>*/}
-                {/*        </li>*/}
-                {/*    )*/}
-                {/*})}*/}
+
+                {props.items.map((item) => {
+                    return (
+                        <li key={item.id}>
+                            <a href={item.html_url}>
+                                <img src={item.avatar_url}/>
+                                <span>{item.login}</span>
+                            </a>
+                        </li>
+                    )
+                })}
             </ul>
         </ProfileRelationsBoxWrapper>
     )
@@ -47,29 +50,53 @@ export default function Home() {
     const user = 'o-brenoalmeida';
 
     // Index 0 = lista de comunidades sendo salvo em communities - Index 1 - função que serve para monitorar modificações da lista, sendo salvo em setComunnities
-    const [communities, setCommunities] = React.useState([{
-        id: '6465465',
-        title: 'Eu odeio acordar cedo',
-        image: 'https://alurakut.vercel.app/capa-comunidade-01.jpg'
-    }]);
-    // const communities = ['Alurakut'];
-    const listaPessoas = [
-        'juunegreiros',
-        'omariosouto',
-        'peas',
-        'marcobrunodev',
-        'waldeyr',
-        'fagundes'
-    ];
+    const [communities, setCommunities] = React.useState([{}]);
+
+    const [following, setFollowing] = React.useState([]);
+    React.useEffect(function () {
+        fetch('https://api.github.com/users/o-brenoalmeida/following')
+            .then(function (serverResponse) {
+                return serverResponse.json();
+            })
+            .then(function (fullResponse) {
+                setFollowing(fullResponse);
+            })
+    }, [])
 
     const [followers, setFollowers] = React.useState([]);
-    React.useEffect(function (){
-        fetch('https://api.github.com/users/peas/followers')
+    React.useEffect(function () {
+        fetch('https://api.github.com/users/o-brenoalmeida/followers')
             .then(function (serverResponse) {
                 return serverResponse.json();
             })
             .then(function (fullResponse) {
                 setFollowers(fullResponse);
+            })
+
+        // API GraphQL
+        fetch('https://graphql.datocms.com/', {
+            method: 'POST',
+            headers: {
+                'Authorization': 'c24d4379d799a1f1f9c662e02b18e1',
+                'Content-Type': 'application/json',
+                'Accept': 'application/json',
+            },
+            body: JSON.stringify({
+                "query": `query {
+                          allCommunities {
+                            id
+                            title
+                            imageUrl
+                            creatorSlug
+                          }
+                    }`
+            })
+        })
+            .then((res) => res.json())
+            .then((fullResponse) => {
+                const communitiesFromDato = fullResponse.data.allCommunities;
+                console.log(communitiesFromDato)
+                setCommunities(communitiesFromDato)
             })
     }, [])
 
@@ -98,16 +125,30 @@ export default function Home() {
                             console.log("Titulo", dadosForm.get('title'));
                             console.log("Image", dadosForm.get('image'));
 
-                            const comunity = {
-                                id: new Data().toISOString(),
+                            const community = {
                                 title: dadosForm.get('title'),
-                                image: dadosForm.get('image')
+                                imageUrl: dadosForm.get('image'),
+                                creatorSlug: user,
                             }
 
-                            // operador spread
-                            // espalhou o conteúdo da lista communities dentro do array communitiesUpdated
-                            const communitiesUpdated = [...communities, comunity];
-                            setCommunities(communitiesUpdated);
+                            fetch('/api/comunidades', {
+                                method: 'POST',
+                                headers: {
+                                    'Content-Type': 'application/json',
+                                },
+                                body: JSON.stringify(community)
+                            })
+                                .then(async(response) => {
+                                    const dados = await response.json();
+                                    console.log(dados.registroCriado);
+                                    const community = dados.registroCriado;
+                                    // operador spread
+                                    // espalhou o conteúdo da lista communities dentro do array communitiesUpdated
+                                    const communitiesUpdated = [...communities, community];
+                                    setCommunities(communitiesUpdated);
+                                })
+
+
                         }}>
                             <div>
                                 <input
@@ -134,25 +175,13 @@ export default function Home() {
 
                 <div className="profileRelationsArea" style={{gridArea: 'profileRelationsArea'}}>
                     <Box>
-                        <ProfileRelationsBox title="Seguidores" items={followers} />
-                        <ProfileRelationsBoxWrapper>
-                            <h2 className="smallTitle">
-                                Amigos ({listaPessoas.length})
-                            </h2>
-                            <ul>
-                                {listaPessoas.map((item) => {
-                                    return (
-                                        <li key={item}>
-                                            <a href={`users/$(item)`} key={item}>
-                                                <img src={`https://github.com/${item}.png`}/>
-                                                <span>{item}</span>
-                                            </a>
-                                        </li>
-                                    )
-                                })}
-                            </ul>
-                        </ProfileRelationsBoxWrapper>
+                        <ProfileRelationsBox title="Seguidores" items={followers}/>
                     </Box>
+
+                    <Box>
+                        <ProfileRelationsBox title="Seguindo" items={following}/>
+                    </Box>
+
                     <Box>
                         <ProfileRelationsBoxWrapper>
                             <h2 className="smallTitle">
@@ -162,8 +191,8 @@ export default function Home() {
                                 {communities.map((item) => {
                                     return (
                                         <li key={item.id}>
-                                            <a href={`users/$(item.title)`} key={item.title}>
-                                                <img src={item.image}/>
+                                            <a href={`users/$(item.id)`}>
+                                                <img src={item.imageUrl}/>
                                                 <span>{item.title}</span>
                                             </a>
                                         </li>
