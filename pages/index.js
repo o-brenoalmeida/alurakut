@@ -1,5 +1,6 @@
 import React from 'react';
-import styled from 'styled-components'
+import nookies from "nookies";
+import jwt from 'jsonwebtoken';
 import MainGrid from '../src/components/MainGrid'
 import Box from '../src/components/Box'
 import {AlurakutMenu, AlurakutProfileSidebarMenuDefault, OrkutNostalgicIconSet} from '../src/lib/AlurakutCommons'
@@ -46,15 +47,16 @@ function ProfileRelationsBox(props) {
     )
 }
 
-export default function Home() {
-    const user = 'o-brenoalmeida';
+export default function Home(props) {
+    const user = props.githubUser;
 
     // Index 0 = lista de comunidades sendo salvo em communities - Index 1 - função que serve para monitorar modificações da lista, sendo salvo em setComunnities
     const [communities, setCommunities] = React.useState([{}]);
 
     const [following, setFollowing] = React.useState([]);
     React.useEffect(function () {
-        fetch('https://api.github.com/users/o-brenoalmeida/following')
+
+        fetch('https://api.github.com/users/' + user + '/following')
             .then(function (serverResponse) {
                 return serverResponse.json();
             })
@@ -65,7 +67,7 @@ export default function Home() {
 
     const [followers, setFollowers] = React.useState([]);
     React.useEffect(function () {
-        fetch('https://api.github.com/users/o-brenoalmeida/followers')
+        fetch('https://api.github.com/users/' + user + '/followers')
             .then(function (serverResponse) {
                 return serverResponse.json();
             })
@@ -138,7 +140,7 @@ export default function Home() {
                                 },
                                 body: JSON.stringify(community)
                             })
-                                .then(async(response) => {
+                                .then(async (response) => {
                                     const dados = await response.json();
                                     console.log(dados.registroCriado);
                                     const community = dados.registroCriado;
@@ -205,4 +207,34 @@ export default function Home() {
             </MainGrid>
         </>
     )
+}
+
+//Roda somente no servidor
+export async function getServerSideProps(context) {
+    const cookies = nookies.get(context)
+    const token = cookies.USER_TOKEN
+
+
+    const {isAuthenticated} = await fetch('https://alurakut.vercel.app/api/auth', {
+        headers: {
+            Authorization: token
+        }
+    })
+        .then((resposta) => resposta.json())
+
+    if (!isAuthenticated) {
+        return {
+            redirect: {
+                destination: '/login',
+                permanent: false,
+            }
+        }
+    }
+
+    const {githubUser} = jwt.decode(token)
+    return {
+        props: {
+            githubUser
+        }
+    }
 }
